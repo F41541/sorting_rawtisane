@@ -38,6 +38,8 @@
         <textarea id="inputData" placeholder="Tempel (Paste) pesan WhatsApp di sini..."></textarea>
         <button onclick="prosesData()">Bersihkan, Kelompokkan & Urutkan</button>
         <textarea id="outputData" placeholder="Hasil yang sudah bersih, terkelompok, dan urut akan muncul di sini..." readonly></textarea>
+        
+        <button id="btnSalin" onclick="salinHasil()" style="background-color: #3498db;">📋 Salin Hasil</button>
     </div>
 
     <script>
@@ -79,12 +81,13 @@
                     baris = baris.replace(regexKata, ' ');
                 });
 
-                // Bersihkan simbol kurung () dan koma yang tersisa dari sisa hapusan keyword
-                baris = baris.replace(/[(),]/g, ' ');
-
-                // Hapus huruf "x " (untuk tanda kali)
-                // \b[xX]\s+ artinya mencari huruf x yang berdiri sendiri diikuti spasi
-                baris = baris.replace(/\b[xX]\s+/g, ' ');
+                // Bersihkan simbol kurung (), koma ,, dan simbol ampersand &
+                baris = baris.replace(/[(),&]/g, ' ');
+                
+                // Hapus huruf "x" atau "X" yang berdiri sendiri (sebagai tanda kali)
+                // \b memastikan kita tidak sengaja menghapus huruf x di dalam kata (seperti "Extra")
+                baris = baris.replace(/\b[xX]\b/g, ' ');
+                baris = baris.replace(/\s[xX]\s/g, ' ');
 
                 // Bersihkan spasi ganda dan spasi di awal/akhir
                 baris = baris.replace(/\s+/g, ' ').trim();
@@ -120,6 +123,34 @@
 
             // Tampilkan hasil gabungan ke kotak teks di bawah
             document.getElementById("outputData").value = hasilAkhir.join('\n').trim();
+        }
+        
+        // FUNGSI BARU UNTUK MENYALIN TEKS
+        function salinHasil() {
+            const teksHasil = document.getElementById("outputData").value;
+            const tombolSalin = document.getElementById("btnSalin");
+
+            // Cek apakah kotaknya masih kosong
+            if (teksHasil.trim() === "") {
+                alert("Belum ada data yang diproses untuk disalin!");
+                return; // Hentikan proses kalau kosong
+            }
+
+            // Perintah ajaib untuk menyalin ke clipboard (papan klip)
+            navigator.clipboard.writeText(teksHasil).then(() => {
+                // Ubah tampilan tombol agar kita tahu sudah berhasil disalin
+                tombolSalin.innerHTML = "✅ Berhasil Disalin!";
+                tombolSalin.style.backgroundColor = "#27ae60"; // Warnanya jadi hijau
+
+                // Kembalikan tombol ke bentuk semula setelah 2 detik
+                setTimeout(() => {
+                    tombolSalin.innerHTML = "📋 Salin Hasil";
+                    tombolSalin.style.backgroundColor = "#3498db"; // Balik ke warna biru
+                }, 2000);
+            }).catch(err => {
+                // Kalau browsernya tidak mendukung atau error
+                alert("Gagal menyalin: " + err);
+            });
         }
     </script>
 
