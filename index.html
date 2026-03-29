@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raw Tisane - Sortir & Bersihkan Stok</title>
+    <title>Raw Tisane - Sortir & Kategori Stok</title>
     <style>
-        /* CSS: Untuk mempercantik tampilan */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f7f6;
@@ -14,121 +13,113 @@
             margin: 0 auto;
             padding: 20px;
         }
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-        }
-        p {
-            text-align: center;
-            font-size: 14px;
-            color: #555;
-        }
-        .container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+        h1 { text-align: center; color: #2c3e50; }
+        p { text-align: center; font-size: 14px; color: #555; }
+        .container { display: flex; flex-direction: column; gap: 15px; }
         textarea {
-            width: 100%;
-            height: 200px;
-            padding: 15px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            resize: vertical;
-            box-sizing: border-box;
+            width: 100%; height: 250px; padding: 15px;
+            font-size: 14px; border: 1px solid #ccc;
+            border-radius: 8px; resize: vertical; box-sizing: border-box;
         }
         button {
-            background-color: #27ae60;
-            color: white;
-            padding: 12px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.3s;
+            background-color: #27ae60; color: white; padding: 12px 20px;
+            font-size: 16px; border: none; border-radius: 8px;
+            cursor: pointer; font-weight: bold; transition: 0.3s;
         }
-        button:hover {
-            background-color: #219150;
-        }
+        button:hover { background-color: #219150; }
     </style>
 </head>
 <body>
 
     <h1>Pemroses Data Stok Raw Tisane</h1>
-    <p>Masukkan pesan dari WhatsApp di bawah ini. Teks akan dibersihkan dari format waktu, nama pengirim, dan nama ekspedisi/marketplace, lalu diurutkan A-Z.</p>
+    <p>Masukkan pesan dari WhatsApp. Sistem akan membersihkan data, mengelompokkan berdasarkan kategori (~Kategori~), dan mengurutkan A-Z di masing-masing kategori.</p>
 
     <div class="container">
-        <textarea id="inputData" placeholder="Tempel (Paste) pesan WhatsApp di sini...&#10;Contoh:&#10;[28/3, 14.41] Raw Herbal: Peach Flower Tea 1&#10;Cordyceps Mushroom Tea 1 SHOPEE SPX"></textarea>
-        
-        <button onclick="prosesData()">Bersihkan & Urutkan (A-Z)</button>
-
-        <textarea id="outputData" placeholder="Hasil yang sudah bersih dan urut akan muncul di sini..." readonly></textarea>
+        <textarea id="inputData" placeholder="Tempel (Paste) pesan WhatsApp di sini..."></textarea>
+        <button onclick="prosesData()">Bersihkan, Kelompokkan & Urutkan</button>
+        <textarea id="outputData" placeholder="Hasil yang sudah bersih, terkelompok, dan urut akan muncul di sini..." readonly></textarea>
     </div>
 
     <script>
-        // JavaScript: Logika aplikasi
         function prosesData() {
-            // 1. Ambil teks dari kotak input
             const inputData = document.getElementById("inputData").value;
-            
-            // 2. Pecah teks menjadi baris per baris
             const lines = inputData.split('\n');
             
-            // Array untuk menyimpan baris yang sudah bersih
-            let hasilBersih = [];
+            // Variabel untuk menyimpan data per kategori ("Folder" penyimpanan)
+            let categories = {};
+            let currentCategory = "PRODUK UTAMA"; // Kategori bawaan
 
-            // Daftar kata yang ingin dihapus (bisa kamu tambah/kurangi sendiri di sini)
+            const regexWA = /^\[.*?\]\s*.*?\:\s*/;
             const kataDihapus = [
                 "shopee", "lazada", "tokopedia", "tiktok", "jnt", "spx", 
-                "jne", "j&t", "kargo", "cargo", "express", "raw tisane", "tea house"
+                "jne", "j\\&t", "kargo", "cargo", "express", "raw tisane", "tea house"
             ];
 
-            // Regex untuk mendeteksi pola header WA: "[tanggal, waktu] nama:"
-            // Penjelasan: ^\[.*?\] mencari kurung siku di awal, \s* mencari spasi, .*?\:\s* mencari teks apapun sampai titik dua dan spasi setelahnya.
-            const regexWA = /^\[.*?\]\s*.*?\:\s*/;
-
-            // 3. Looping: Proses setiap baris satu per satu
+            // Looping baris per baris
             for (let i = 0; i < lines.length; i++) {
                 let baris = lines[i];
 
-                // A. Hapus header pesan WA
-                baris = baris.replace(regexWA, '');
+                // 1. Cek Pesan Baru WA (Reset ke Produk Utama)
+                if (regexWA.test(baris)) {
+                    currentCategory = "PRODUK UTAMA";
+                    baris = baris.replace(regexWA, '');
+                }
 
-                // Menghapus semua teks yang ada di dalam tanda ~ (contoh: ~batal~)
-                baris = baris.replace(/~.*?~/g, '');
-                
-                // Menghapus huruf "x" dan spasi setelahnya (huruf besar/kecil)
-                baris = baris.replace(/x /gi, ' ');
+                // 2. Cek apakah ini judul Kategori (mengandung tanda ~)
+                // Kita tangkap teks yang ada di antara tanda ~
+                let matchKategori = baris.match(/~+(.*?)~+/);
+                if (matchKategori) {
+                    currentCategory = matchKategori[1].trim(); // Pindah "Folder"
+                    continue; // Lanjut ke baris selanjutnya, judul tidak perlu diproses sebagai produk
+                }
 
-                // B. Hapus kata-kata dari daftar kataDihapus
+                // 3. Pembersihan Kata (Hapus marketplace/kurir)
                 kataDihapus.forEach(kata => {
-                    // Agar simbol khusus seperti & (di j&t) terbaca sebagai teks biasa
-                    const kataAman = kata.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
-                    
-                    // Regex ini memastikan kita menghapus kata yang berdiri sendiri (dikelilingi spasi atau di awal/akhir)
-                    // "gi" berarti: g = global (semua kemunculan), i = insensitive (huruf besar/kecil dianggap sama)
-                    const regexKata = new RegExp(`(^|\\s)${kataAman}(?=\\s|$)`, "gi");
+                    const regexKata = new RegExp(kata, "gi"); // g = global, i = abaikan huruf besar/kecil
                     baris = baris.replace(regexKata, ' ');
                 });
 
-                // C. Bersihkan spasi ganda dan spasi di awal/akhir paragraf (trim)
+                // Bersihkan simbol kurung () dan koma yang tersisa dari sisa hapusan keyword
+                baris = baris.replace(/[(),]/g, ' ');
+
+                // Hapus huruf "x " (untuk tanda kali)
+                // \b[xX]\s+ artinya mencari huruf x yang berdiri sendiri diikuti spasi
+                baris = baris.replace(/\b[xX]\s+/g, ' ');
+
+                // Bersihkan spasi ganda dan spasi di awal/akhir
                 baris = baris.replace(/\s+/g, ' ').trim();
 
-                // D. Jika baris tidak kosong setelah dibersihkan, masukkan ke hasil
+                // 4. Masukkan produk ke dalam "Folder" kategorinya masing-masing
                 if (baris !== '') {
-                    hasilBersih.push(baris);
+                    // Jika folder kategori belum ada, buat foldernya dulu
+                    if (!categories[currentCategory]) {
+                        categories[currentCategory] = [];
+                    }
+                    // Masukkan produk ke dalam folder tersebut
+                    categories[currentCategory].push(baris);
                 }
             }
 
-            // 4. Proses Pengurutan A-Z (Murni berdasarkan huruf/angka, tanpa peduli huruf besar/kecil)
-            hasilBersih.sort((a, b) => {
-                return a.toLowerCase().localeCompare(b.toLowerCase());
-            });
+            // 5. Susun dan Urutkan (A-Z) untuk Output Akhir
+            let hasilAkhir = [];
+            
+            // Ambil semua nama "folder" yang sudah dibuat
+            for (let kategori in categories) {
+                // Urutkan isi dalam folder tersebut (A-Z)
+                categories[kategori].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+                
+                // Tulis judul kategorinya
+                hasilAkhir.push(`~ ${kategori} ~`);
+                
+                // Tulis daftar produknya yang sudah urut
+                hasilAkhir.push(categories[kategori].join('\n'));
+                
+                // Tambahkan jarak spasi (baris kosong) antar kategori agar rapi
+                hasilAkhir.push(""); 
+            }
 
-            // 5. Tampilkan hasil di kotak output dengan menyatukan kembali baris-baris tersebut
-            document.getElementById("outputData").value = hasilBersih.join('\n');
+            // Tampilkan hasil gabungan ke kotak teks di bawah
+            document.getElementById("outputData").value = hasilAkhir.join('\n').trim();
         }
     </script>
 
