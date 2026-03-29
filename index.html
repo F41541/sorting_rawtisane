@@ -96,6 +96,12 @@
                 // A. Hapus header pesan WA
                 baris = baris.replace(regexWA, '');
 
+                // Menghapus semua teks yang ada di dalam tanda ~ (contoh: ~batal~)
+                baris = baris.replace(/~.*?~/g, '');
+                
+                // Menghapus huruf "x" dan spasi setelahnya (huruf besar/kecil)
+                baris = baris.replace(/x /gi, ' ');
+
                 // B. Hapus kata-kata dari daftar kataDihapus
                 kataDihapus.forEach(kata => {
                     // Agar simbol khusus seperti & (di j&t) terbaca sebagai teks biasa
