@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raw Tisane - Sortir & Bersihkan Stok</title>
+    <style>
+        /* CSS: Untuk mempercantik tampilan */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        p {
+            text-align: center;
+            font-size: 14px;
+            color: #555;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #27ae60;
+            color: white;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #219150;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Pemroses Data Stok Raw Tisane</h1>
+    <p>Masukkan pesan dari WhatsApp di bawah ini. Teks akan dibersihkan dari format waktu, nama pengirim, dan nama ekspedisi/marketplace, lalu diurutkan A-Z.</p>
+
+    <div class="container">
+        <textarea id="inputData" placeholder="Tempel (Paste) pesan WhatsApp di sini...&#10;Contoh:&#10;[28/3, 14.41] Raw Herbal: Peach Flower Tea 1&#10;Cordyceps Mushroom Tea 1 SHOPEE SPX"></textarea>
+        
+        <button onclick="prosesData()">Bersihkan & Urutkan (A-Z)</button>
+
+        <textarea id="outputData" placeholder="Hasil yang sudah bersih dan urut akan muncul di sini..." readonly></textarea>
+    </div>
+
+    <script>
+        // JavaScript: Logika aplikasi
+        function prosesData() {
+            // 1. Ambil teks dari kotak input
+            const inputData = document.getElementById("inputData").value;
+            
+            // 2. Pecah teks menjadi baris per baris
+            const lines = inputData.split('\n');
+            
+            // Array untuk menyimpan baris yang sudah bersih
+            let hasilBersih = [];
+
+            // Daftar kata yang ingin dihapus (bisa kamu tambah/kurangi sendiri di sini)
+            const kataDihapus = [
+                "shopee", "lazada", "tokopedia", "tiktok", "jnt", "spx", 
+                "jne", "j&t", "kargo", "cargo", "express", "raw tisane", "tea house"
+            ];
+
+            // Regex untuk mendeteksi pola header WA: "[tanggal, waktu] nama:"
+            // Penjelasan: ^\[.*?\] mencari kurung siku di awal, \s* mencari spasi, .*?\:\s* mencari teks apapun sampai titik dua dan spasi setelahnya.
+            const regexWA = /^\[.*?\]\s*.*?\:\s*/;
+
+            // 3. Looping: Proses setiap baris satu per satu
+            for (let i = 0; i < lines.length; i++) {
+                let baris = lines[i];
+
+                // A. Hapus header pesan WA
+                baris = baris.replace(regexWA, '');
+
+                // B. Hapus kata-kata dari daftar kataDihapus
+                kataDihapus.forEach(kata => {
+                    // Agar simbol khusus seperti & (di j&t) terbaca sebagai teks biasa
+                    const kataAman = kata.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+                    
+                    // Regex ini memastikan kita menghapus kata yang berdiri sendiri (dikelilingi spasi atau di awal/akhir)
+                    // "gi" berarti: g = global (semua kemunculan), i = insensitive (huruf besar/kecil dianggap sama)
+                    const regexKata = new RegExp(`(^|\\s)${kataAman}(?=\\s|$)`, "gi");
+                    baris = baris.replace(regexKata, ' ');
+                });
+
+                // C. Bersihkan spasi ganda dan spasi di awal/akhir paragraf (trim)
+                baris = baris.replace(/\s+/g, ' ').trim();
+
+                // D. Jika baris tidak kosong setelah dibersihkan, masukkan ke hasil
+                if (baris !== '') {
+                    hasilBersih.push(baris);
+                }
+            }
+
+            // 4. Proses Pengurutan A-Z (Murni berdasarkan huruf/angka, tanpa peduli huruf besar/kecil)
+            hasilBersih.sort((a, b) => {
+                return a.toLowerCase().localeCompare(b.toLowerCase());
+            });
+
+            // 5. Tampilkan hasil di kotak output dengan menyatukan kembali baris-baris tersebut
+            document.getElementById("outputData").value = hasilBersih.join('\n');
+        }
+    </script>
+
+</body>
+</html>
