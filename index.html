@@ -54,7 +54,7 @@
             const regexWA = /^\[.*?\]\s*.*?\:\s*/;
             const kataDihapus = [
                 "shopee", "lazada", "tokopedia", "tiktok", "jnt", "spx", 
-                "jne", "j\\&t", "kargo", "cargo", "express", "raw tisane", "tea house"
+                "jne", "j\\&t", "kargo", "cargo", "express", "raw tisane", "tea house", "standar", "standard"
             ];
 
             // Looping baris per baris
@@ -88,6 +88,9 @@
                 // \b memastikan kita tidak sengaja menghapus huruf x di dalam kata (seperti "Extra")
                 baris = baris.replace(/\b[xX]\b/g, ' ');
                 baris = baris.replace(/\s[xX]\s/g, ' ');
+
+                // Menghapus semua teks di dalam tanda bintang *...* beserta bintangnya
+                baris = baris.replace(/\*.*?\*/g, '');
 
                 // Bersihkan spasi ganda dan spasi di awal/akhir
                 baris = baris.replace(/\s+/g, ' ').trim();
