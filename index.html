@@ -104,7 +104,7 @@
 
                     // Cari angka di paling belakang kalimat
                     // (.+?) artinya ambil nama produk, \s+(\d+)$ artinya ambil angka di spasi terakhir
-                    let match = baris.match(/(.+?)\s+(\d+)$/);
+                    let match = baris.match(/(.+?)\s+[xX]?\s*(\d+)$/);
                     let namaProduk = baris;
                     let jumlah = 1; // Kalau kebetulan nggak ada angka di belakangnya, kita anggap jumlahnya 1
 
