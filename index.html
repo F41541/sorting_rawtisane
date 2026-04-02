@@ -95,30 +95,51 @@
                 // Bersihkan spasi ganda dan spasi di awal/akhir
                 baris = baris.replace(/\s+/g, ' ').trim();
 
-                // 4. Masukkan produk ke dalam "Folder" kategorinya masing-masing
+                // 4. Pisahkan Nama Produk dan Angka (Jumlahnya), lalu rekap ke "Folder"
                 if (baris !== '') {
-                    // Jika folder kategori belum ada, buat foldernya dulu
+                    // Siapkan folder kategori jika belum ada (sekarang pakai Object {} agar bisa merekap)
                     if (!categories[currentCategory]) {
-                        categories[currentCategory] = [];
+                        categories[currentCategory] = {}; 
                     }
-                    // Masukkan produk ke dalam folder tersebut
-                    categories[currentCategory].push(baris);
+
+                    // Cari angka di paling belakang kalimat
+                    // (.+?) artinya ambil nama produk, \s+(\d+)$ artinya ambil angka di spasi terakhir
+                    let match = baris.match(/(.+?)\s+(\d+)$/);
+                    let namaProduk = baris;
+                    let jumlah = 1; // Kalau kebetulan nggak ada angka di belakangnya, kita anggap jumlahnya 1
+
+                    if (match) {
+                        namaProduk = match[1].trim(); // Ambil nama tehnya saja
+                        jumlah = parseInt(match[2], 10); // Ubah teks angka jadi angka matematika murni
+                    }
+
+                    // REKAP: Kalau produk sudah ada di folder, tambahkan angkanya. Kalau belum, buat baru.
+                    if (categories[currentCategory][namaProduk]) {
+                        categories[currentCategory][namaProduk] += jumlah;
+                    } else {
+                        categories[currentCategory][namaProduk] = jumlah;
+                    }
                 }
             }
 
-            // 5. Susun dan Urutkan (A-Z) untuk Output Akhir
+            // 5. Susun, Urutkan (A-Z), dan Cetak Output Akhir
             let hasilAkhir = [];
             
-            // Ambil semua nama "folder" yang sudah dibuat
+            // Buka setiap folder kategori yang ada
             for (let kategori in categories) {
-                // Urutkan isi dalam folder tersebut (A-Z)
-                categories[kategori].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-                
                 // Tulis judul kategorinya
                 hasilAkhir.push(`~ ${kategori} ~`);
+
+                // Ambil daftar nama produk di kategori ini, lalu urutkan A-Z
+                let daftarProduk = Object.keys(categories[kategori]);
+                daftarProduk.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
                 
-                // Tulis daftar produknya yang sudah urut
-                hasilAkhir.push(categories[kategori].join('\n'));
+                // Gabungkan kembali nama produk dengan TOTAL angkanya
+                for (let i = 0; i < daftarProduk.length; i++) {
+                    let produk = daftarProduk[i];
+                    let totalJumlah = categories[kategori][produk];
+                    hasilAkhir.push(`${produk} ${totalJumlah}`);
+                }
                 
                 // Tambahkan jarak spasi (baris kosong) antar kategori agar rapi
                 hasilAkhir.push(""); 
