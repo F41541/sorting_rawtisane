@@ -27,6 +27,17 @@
             cursor: pointer; font-weight: bold; transition: 0.3s;
         }
         button:hover { background-color: #219150; }
+        
+        /* CSS BARU UNTUK KOTAK HASIL BERWARNA */
+        .output-box {
+            width: 100%; height: 250px; padding: 15px; font-size: 14px; 
+            border: 1px solid #ccc; border-radius: 8px; background-color: #fff; 
+            overflow-y: auto; box-sizing: border-box; 
+            white-space: pre-wrap; /* Agar spasi dan enter terbaca */
+        }
+        /* Dekorasi Warna */
+        .angka-highlight { color: #d35400; font-weight: bold; font-size: 15px; } /* Warna Oranye Kemerahan */
+        .judul-kategori { color: #2980b9; font-weight: bold; } /* Warna Biru */
     </style>
 </head>
 <body>
@@ -37,7 +48,8 @@
     <div class="container">
         <textarea id="inputData" placeholder="Tempel (Paste) pesan WhatsApp di sini..."></textarea>
         <button onclick="prosesData()">Bersihkan, Kelompokkan & Urutkan</button>
-        <textarea id="outputData" placeholder="Hasil yang sudah bersih, terkelompok, dan urut akan muncul di sini..." readonly></textarea>
+        
+        <div id="outputData" class="output-box">Hasil yang sudah bersih, terkelompok, dan urut akan muncul di sini...</div>
         
         <button id="btnSalin" onclick="salinHasil()" style="background-color: #3498db;">📋 Salin Hasil</button>
     </div>
@@ -49,7 +61,7 @@
             
             // Variabel untuk menyimpan data per kategori ("Folder" penyimpanan)
             let categories = {};
-            let currentCategory = "PRODUK UTAMA"; // Kategori bawaan
+            let currentCategory = "RAW TISANE"; // Kategori bawaan
 
             const regexWA = /^\[.*?\]\s*.*?\:\s*/;
             const kataDihapus = [
@@ -61,9 +73,9 @@
             for (let i = 0; i < lines.length; i++) {
                 let baris = lines[i];
 
-                // 1. Cek Pesan Baru WA (Reset ke Produk Utama)
+                // 1. Cek Pesan Baru WA (Reset ke RAW TISANE)
                 if (regexWA.test(baris)) {
-                    currentCategory = "PRODUK UTAMA";
+                    currentCategory = "RAW TISANE";
                     baris = baris.replace(regexWA, '');
                 }
 
@@ -127,35 +139,36 @@
             
             // Buka setiap folder kategori yang ada
             for (let kategori in categories) {
-                // Tulis judul kategorinya
-                hasilAkhir.push(`~ ${kategori} ~`);
+                // Tulis judul kategorinya dengan kode warna (HTML)
+                hasilAkhir.push(`<span class="judul-kategori">~ ${kategori} ~</span>`);
 
                 // Ambil daftar nama produk di kategori ini, lalu urutkan A-Z
                 let daftarProduk = Object.keys(categories[kategori]);
                 daftarProduk.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
                 
-                // Gabungkan kembali nama produk dengan TOTAL angkanya
+                // Gabungkan kembali nama produk dengan TOTAL angkanya dengan kode warna
                 for (let i = 0; i < daftarProduk.length; i++) {
                     let produk = daftarProduk[i];
                     let totalJumlah = categories[kategori][produk];
-                    hasilAkhir.push(`${produk} ${totalJumlah}`);
+                    hasilAkhir.push(`${produk} <span class="angka-highlight">${totalJumlah}</span>`);
                 }
                 
                 // Tambahkan jarak spasi (baris kosong) antar kategori agar rapi
                 hasilAkhir.push(""); 
             }
 
-            // Tampilkan hasil gabungan ke kotak teks di bawah
-            document.getElementById("outputData").value = hasilAkhir.join('\n').trim();
+            // Tampilkan hasil gabungan ke kotak div di bawah menggunakan innerHTML
+            document.getElementById("outputData").innerHTML = hasilAkhir.join('<br>');
         }
         
         // FUNGSI BARU UNTUK MENYALIN TEKS
         function salinHasil() {
-            const teksHasil = document.getElementById("outputData").value;
+            // MENGGUNAKAN innerText AGAR WARNA TIDAK IKUT KESALIN KE SPREADSHEET
+            const teksHasil = document.getElementById("outputData").innerText;
             const tombolSalin = document.getElementById("btnSalin");
 
-            // Cek apakah kotaknya masih kosong
-            if (teksHasil.trim() === "") {
+            // Cek apakah kotaknya masih kosong atau berisi teks bawaan
+            if (teksHasil.trim() === "" || teksHasil.includes("Hasil yang sudah bersih")) {
                 alert("Belum ada data yang diproses untuk disalin!");
                 return; // Hentikan proses kalau kosong
             }
