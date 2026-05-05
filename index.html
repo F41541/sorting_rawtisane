@@ -88,9 +88,10 @@
                     continue; // Lanjut ke baris selanjutnya, judul tidak perlu diproses sebagai produk
                 }
 
-                // 3. Pembersihan Kata (Hapus marketplace/kurir)
+                // 3. Pembersihan Kata (Hapus marketplace/kurir secara UTUH)
                 kataDihapus.forEach(kata => {
-                    const regexKata = new RegExp(kata, "gi"); // g = global, i = abaikan huruf besar/kecil
+                    // Tambahan \\b memastikan hanya menghapus kata yang berdiri sendiri
+                    const regexKata = new RegExp("\\b" + kata + "\\b", "gi"); 
                     baris = baris.replace(regexKata, ' ');
                 });
 
